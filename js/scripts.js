@@ -1,11 +1,16 @@
 class Round {
     constructor() {
         this.round = 1
+        this.correctAnswer = 0
         this.totalRounds = 5
     }
 
     get getRound() {
         return this.round
+    }
+
+    get getCorrectAnswer() {
+        return this.correctAnswer
     }
 
     get getTotalRounds() {
@@ -15,63 +20,65 @@ class Round {
     incrementRound() {
         this.round ++
     }
+
+    incrementCorrectAnswer() {
+        this.correctAnswer ++
+    }
 }
 
 class Question {
     constructor() {
         this.totalOptions = 4
         this.intervalWrongAnswers = [-2, +2]
-        this.operator = this.getRandomOperation()
-        this.num1 = this.getRandomNumber()
-        this.num2 = this.getRandomNumber()
+        this.num1 = this.generateRandomNumber()
+        this.num2 = this.generateRandomNumber()
+        this.operator = this.pickRandomOperator()
         this.result = this.generateResult()
         this.letters = ['a', 'b', 'c', 'd']
-        this.options = this.generateOptions()
+        this.answers = this.generateAnswers()
+        this.correctLetter = this.searchCorrectLetter()
     }
 
-    get getNum1() {
-        return this.num1
-    }
-
-    get getNum2() {
-        return this.num2
-    }
-
-    get getOperator() {
-        if (this.operator == 1) {return '+'}
-        if (this.operator == 2) {return '-'}
-        if (this.operator == 3) {return 'x'}
-        return None
-    }
-
-    get getOptions() {
-        return this.options
+    get getAnswers() {
+        return this.answers
     }
 
     get getLetters() {
         return this.letters
     }
 
-    get getResult() {
-        return this.result
+    get getQuestion() {
+        return `${this.num1} ${this.operator} ${this.num2}`
+    }
+    
+    get getCorrectLetterUpper() {
+        return this.correctLetter.toUpperCase()
     }
 
-    getRandomOperation() {
-        return Math.floor(Math.random() * 3) + 1      
-    } 
+    searchCorrectLetter() {
+        return this.letters[this.answers.indexOf(this.result)] 
+    }
 
-    getRandomNumber() {
+    generateRandomNumber() {
         return Math.floor(Math.random() * 101)      
-    }    
+    }  
+
+    pickRandomOperator() {
+        const operator = Math.floor(Math.random() * 3) + 1     
+        if (operator == 1) {return '+'}
+        if (operator == 2) {return '-'}
+        if (operator == 3) {return 'x'}
+        return None         
+    }   
 
     generateResult() {
-        if (this.operator == 1) {return this.num1 + this.num2}
-        if (this.operator == 2) {return this.num1 - this.num2}
-        if (this.operator == 3) {return this.num1 * this.num2}
+        if (this.operator == '+') {return this.num1 + this.num2}
+        if (this.operator == '-') {return this.num1 - this.num2}
+        if (this.operator == 'x') {return this.num1 * this.num2}
         return None              
     } 
 
-    generateOptions() {     
+    generateAnswers() {     
         const generateRandomNumber = () => {
             const [intervalMin, intervalMax] = this.intervalWrongAnswers
             const min = this.result + intervalMin
@@ -85,7 +92,7 @@ class Question {
         }
         
         // choose a random letter to receive the correct answer
-        let correctOption = Math.floor(Math.random() * this.totalOptions);
+        const correctOption = Math.floor(Math.random() * this.totalOptions);
 
         let array = []
         for (let i=0; i<this.totalOptions;i++) {
@@ -107,47 +114,72 @@ class Question {
         }
         return array
     }
-
-    getQuestion() {
-        return `${this.getNum1} ${this.getOperator} ${this.getNum2}`
-    } 
 }
 
 function newQuestion(round) {
-    question = new Question()
 
-    const question_id = document.querySelector("#id-question")
-    const question_txt = document.querySelector("#question-display")
+    return new Promise((resolve, reject) => {
 
-    question_id.textContent = round.getRound
-    question_txt.textContent = question.getQuestion()
+        question = new Question()
 
-    // clean options
-    let buttons = document.querySelectorAll("#quiz-answer button")
-    buttons.forEach( btn => btn.remove())
+        const question_id = document.querySelector("#id-question")
+        const question_txt = document.querySelector("#question-display")
 
-    // load options
-    let quizAnswer = document.querySelector("#quiz-answer")
+        question_id.textContent = round.getRound
+        question_txt.textContent = question.getQuestion
 
-    question.getLetters.forEach( function callback(letter, index) {
-        const answerTemplate = document.querySelector('.answer-template').cloneNode(true)
-        const optionLetter = answerTemplate.querySelector('.option-letter')
-        const optionAnswer = answerTemplate.querySelector('.option-answer')
+        // clean options
+        const buttons = document.querySelectorAll("#quiz-answer button")
+        buttons.forEach( btn => btn.remove())
 
-        optionLetter.textContent = letter
-        optionAnswer.textContent = question.getOptions[index]
+        // load options
+        const quizAnswer = document.querySelector("#quiz-answer")
 
-        answerTemplate.classList.remove("hide")
-        answerTemplate.classList.remove("answer-template")
-        quizAnswer.appendChild(answerTemplate)
-    })
+        question.getLetters.forEach( function callback(letter, index) {
+            const answerTemplate = document.querySelector('.answer-template').cloneNode(true)
+            const optionLetter = answerTemplate.querySelector('.option-letter')
+            const optionAnswer = answerTemplate.querySelector('.option-answer')
+
+            optionLetter.textContent = letter
+            optionAnswer.textContent = question.getAnswers[index]
+
+            answerTemplate.classList.remove("hide")
+            answerTemplate.classList.remove("answer-template")
+            quizAnswer.appendChild(answerTemplate)
+
+            // check correct answer
+            answerTemplate.addEventListener("click", function() {
+                const letterClick = this.querySelector(".option-letter").innerText
+                const letterCorrect = question.getCorrectLetterUpper
+                        
+                const buttons = document.querySelectorAll("#quiz-answer button")
+                let gotCorrectAnswer = (letterClick == letterCorrect)
+                buttons.forEach( btn => {
+                    const optionLetter = btn.querySelector(".option-letter").innerText
+
+                    if (optionLetter == letterCorrect) {
+                        btn.classList.add("correct-answer")
+                    } else {
+                        btn.classList.add("wrong-answer")
+                    }
+
+                    setTimeout(()=>{
+                        resolve(gotCorrectAnswer)
+                    }, 2000)
+                })
+            })
+        }) 
+    }) 
 }
 
-function startGame() {
+const startGame = async() => {
     round = new Round()
 
-    newQuestion(round) 
-    round.incrementRound()
+    for (i=0; i<round.totalRounds; i++) {
+        const result = await newQuestion(round)
+        if (result) { round.incrementCorrectAnswer() }
+        round.incrementRound()
+   }
 }
 
 startGame()
