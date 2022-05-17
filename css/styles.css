@@ -109,7 +109,7 @@ body {
 }
     
 #score-container p {
-    font-size: 14px;
+    font-size: 18px;
     margin: 20px 0;
 }
     
@@ -119,11 +119,13 @@ body {
 }
     
 #total-correct-answer {
+    font-size: 25px;
     font-weight: bold;
-    color: #40B576;
+    color: #22613f;
 }
 
 #total-questions {
+    font-size: 25px;
     font-weight: bold;
     color: #075EA4;
 }

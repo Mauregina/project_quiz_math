@@ -17,6 +17,10 @@ class Round {
         return this.totalRounds
     }
 
+    get getPercentScore() {
+        return ((this.getCorrectAnswer / this.totalRounds) * 100).toFixed(2)
+    }
+
     incrementRound() {
         this.round ++
     }
@@ -24,12 +28,13 @@ class Round {
     incrementCorrectAnswer() {
         this.correctAnswer ++
     }
+
 }
 
 class Question {
     constructor() {
         this.totalOptions = 4
-        this.intervalWrongAnswers = [-2, +2]
+        this.intervalWrongAnswers = [-20, +20]
         this.num1 = this.generateRandomNumber()
         this.num2 = this.generateRandomNumber()
         this.operator = this.pickRandomOperator()
@@ -87,18 +92,16 @@ class Question {
             return Math.floor(Math.random() * (max - min + 1)) + min
         }
 
-        const containsRandomNumberAlready = (randomNumber) => {
-            return array.includes(randomNumber)
-        }
+        const containsRandomNumberAlready = randomNumber => answers.includes(randomNumber)
         
-        // choose a random letter to receive the correct answer
-        const correctOption = Math.floor(Math.random() * this.totalOptions);
+        // choose a random position in array to receive the correct answer
+        const correctOptionPosition = Math.floor(Math.random() * this.totalOptions);
 
-        let array = []
+        let answers = []
         for (let i=0; i<this.totalOptions;i++) {
             
-            if (i == correctOption) {
-                array.push(this.result)
+            if (i == correctOptionPosition) {
+                answers.push(this.result)
             }
             // generate random answer
             else {
@@ -109,10 +112,10 @@ class Question {
                 }
                 while ((randomNumber == this.result) || containsRandomNumberAlready(randomNumber))
 
-                array.push(randomNumber)   
+                answers.push(randomNumber)   
             }
         }
-        return array
+        return answers
     }
 }
 
@@ -165,24 +168,54 @@ function newQuestion(round) {
 
                     setTimeout(()=>{
                         resolve(gotCorrectAnswer)
-                    }, 2000)
+                    }, 1000)
                 })
             })
         }) 
     }) 
 }
 
-const startGame = async() => {
+function hideOrShowQuiz() {
+    const quizContainer = document.querySelector("#quiz-container")
+    const scoreContainer = document.querySelector("#score-container")
+
+    quizContainer.classList.toggle("hide")
+    scoreContainer.classList.toggle("hide")
+}
+
+function showScore(round) {
+    const scorePercent = document.querySelector("#score-percent span")
+    const totalCorrect = document.querySelector("#total-correct-answer")
+    const totalQuestion = document.querySelector("#total-questions")
+
+    hideOrShowQuiz()
+
+    scorePercent.textContent = round.getPercentScore
+    totalCorrect.textContent = round.getCorrectAnswer
+    totalQuestion.textContent = round.totalRounds
+}
+
+async function startGame(){
     round = new Round()
 
     for (i=0; i<round.totalRounds; i++) {
         const result = await newQuestion(round)
         if (result) { round.incrementCorrectAnswer() }
         round.incrementRound()
-   }
+    }
+
+    showScore(round)
 }
 
 startGame()
+
+const restartBtn = document.querySelector("#restart")
+
+restartBtn.addEventListener("click", function() {
+    hideOrShowQuiz()
+
+    startGame()
+})
 
 
 
