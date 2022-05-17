@@ -156,7 +156,7 @@ function newQuestion(round) {
                 const letterCorrect = question.getCorrectLetterUpper
                         
                 const buttons = document.querySelectorAll("#quiz-answer button")
-                let gotCorrectAnswer = (letterClick == letterCorrect)
+                const gotCorrectAnswer = (letterClick == letterCorrect)
                 buttons.forEach( btn => {
                     const optionLetter = btn.querySelector(".option-letter").innerText
 
