@@ -1,36 +1,3 @@
-class Round {
-    constructor() {
-        this.round = 1
-        this.correctAnswer = 0
-        this.totalRounds = 5
-    }
-
-    get getRound() {
-        return this.round
-    }
-
-    get getCorrectAnswer() {
-        return this.correctAnswer
-    }
-
-    get getTotalRounds() {
-        return this.totalRounds
-    }
-
-    get getPercentScore() {
-        return ((this.getCorrectAnswer / this.totalRounds) * 100).toFixed(2)
-    }
-
-    incrementRound() {
-        this.round ++
-    }
-
-    incrementCorrectAnswer() {
-        this.correctAnswer ++
-    }
-
-}
-
 class Question {
     constructor() {
         this.totalOptions = 4
@@ -128,7 +95,7 @@ function newQuestion(round) {
         const question_id = document.querySelector("#id-question")
         const question_txt = document.querySelector("#question-display")
 
-        question_id.textContent = round.getRound
+        question_id.textContent = round.round
         question_txt.textContent = question.getQuestion
 
         // clean options
@@ -190,17 +157,26 @@ function showScore(round) {
 
     hideOrShowQuiz()
 
-    scorePercent.textContent = round.getPercentScore
-    totalCorrect.textContent = round.getCorrectAnswer
+    scorePercent.textContent = round.getPercentScore()
+    totalCorrect.textContent = round.correctAnswer
     totalQuestion.textContent = round.totalRounds
 }
 
 async function startGame(){
-    round = new Round()
+    let round = {
+        round: 1,
+        correctAnswer: 0,
+        totalRounds: 5,
+        getPercentScore: function() { return ((this.correctAnswer / this.totalRounds) * 100).toFixed(2)},
+        incrementRound: function() { this.round ++ },
+        incrementCorrectAnswer: function() {this.correctAnswer ++}
+    }
 
     for (i=0; i<round.totalRounds; i++) {
         const result = await newQuestion(round)
-        if (result) { round.incrementCorrectAnswer() }
+        if (result) { 
+            round.incrementCorrectAnswer() 
+        }
         round.incrementRound()
     }
 
